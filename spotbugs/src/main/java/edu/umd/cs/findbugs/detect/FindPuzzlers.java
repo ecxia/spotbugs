@@ -99,6 +99,10 @@ public class FindPuzzlers extends OpcodeStackDetector {
 
     int prevOpcodeIncrementedRegister;
 
+    int lastIncrementedRegister;
+
+    boolean onlyArithmeticSinceIncrementedRegister = false;
+
     int valueOfConstantArgumentToShift;
 
     int best_priority_for_ICAST_INTEGER_MULTIPLY_CAST_TO_LONG;
@@ -443,16 +447,35 @@ public class FindPuzzlers extends OpcodeStackDetector {
 
         if (isRegisterStore() && (seen == Const.ISTORE || seen == Const.ISTORE_0 || seen == Const.ISTORE_1 || seen == Const.ISTORE_2
                 || seen == Const.ISTORE_3)
-                && getRegisterOperand() == prevOpcodeIncrementedRegister) {
+                && getRegisterOperand() == lastIncrementedRegister && onlyArithmeticSinceIncrementedRegister) {
             bugAccumulator.accumulateBug(
                     new BugInstance(this, "DLS_OVERWRITTEN_INCREMENT", HIGH_PRIORITY).addClassAndMethod(this), this);
-
         }
+        if (prevOpcodeIncrementedRegister != -1) {
+            if (seen == Const.IADD || seen == Const.IAND || seen == Const.IDIV || seen == Const.IMUL || seen == Const.INEG || seen == Const.IOR
+                    || seen == Const.IREM || seen == Const.ISHL || seen == Const.ISHR || seen == Const.ISUB || seen == Const.IUSHR
+                    || seen == Const.IXOR) {
+                onlyArithmeticSinceIncrementedRegister = true;
+            }
+        }
+
+        if (onlyArithmeticSinceIncrementedRegister) {
+            if (!(seen == Const.IADD || seen == Const.IAND || seen == Const.IDIV || seen == Const.IMUL || seen == Const.INEG || seen == Const.IOR
+                    || seen == Const.IREM || seen == Const.ISHL || seen == Const.ISHR || seen == Const.ISUB || seen == Const.IUSHR
+                    || seen == Const.IXOR)) {
+                onlyArithmeticSinceIncrementedRegister = false;
+            }
+        }
+
+
         if (seen == Const.IINC) {
             prevOpcodeIncrementedRegister = getRegisterOperand();
+            lastIncrementedRegister = prevOpcodeIncrementedRegister;
         } else {
             prevOpcodeIncrementedRegister = -1;
         }
+
+        // check if all operations since increment are arithmetic
 
         // Java Puzzlers, Chapter 2, puzzle 1
         // Look for ICONST_2 IREM ICONST_1 IF_ICMPNE L1
