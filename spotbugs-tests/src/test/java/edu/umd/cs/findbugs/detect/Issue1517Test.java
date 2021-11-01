@@ -6,20 +6,14 @@ import edu.umd.cs.findbugs.test.matcher.BugInstanceMatcherBuilder;
 
 import org.junit.Test;
 import static edu.umd.cs.findbugs.test.CountMatcher.containsExactly;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-/**
- * @see <a href="https://github.com/spotbugs/spotbugs/issues/1641">GitHub issue</a>
- */
-public class Issue1641Test extends AbstractIntegrationTest {
+public class Issue1517Test extends AbstractIntegrationTest {
     @Test
     public void test() {
         System.setProperty("frc.debug", "true");
-        performAnalysis("ghIssues/Issue1641.class");
-        BugInstanceMatcher bugTypeMatcher = new BugInstanceMatcherBuilder()
-                .bugType("IL_INFINITE_RECURSIVE_LOOP")
-                .atLine(10)
-                .build();
+        performAnalysis("ghIssues/Issue1517.class");
+        BugInstanceMatcher bugTypeMatcher = new BugInstanceMatcherBuilder().bugType("DLS_OVERWRITTEN_INCREMENT").atLine(6).build();
         assertThat(getBugCollection(), containsExactly(1, bugTypeMatcher));
     }
 }
